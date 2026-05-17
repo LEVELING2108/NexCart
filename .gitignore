@@ -30,6 +30,9 @@ docker/postgres-data/
 .DS_Store
 Thumbs.db
 
+# Gemini Memory
+GEMINI.md
+
 # Other
 temp/
 tmp/
