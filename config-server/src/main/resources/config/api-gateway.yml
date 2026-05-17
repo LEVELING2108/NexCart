@@ -6,18 +6,31 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/auth/**, /api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: user-service
+                fallbackUri: forward:/fallback/user
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
           filters:
             - name: JwtAuthFilter
+            - name: CircuitBreaker
+              args:
+                name: product-service
+                fallbackUri: forward:/fallback/product
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
           filters:
             - name: JwtAuthFilter
+            - name: CircuitBreaker
+              args:
+                name: order-service
+                fallbackUri: forward:/fallback/order
   data:
     redis:
       host: localhost

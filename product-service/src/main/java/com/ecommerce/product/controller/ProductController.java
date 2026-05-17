@@ -35,12 +35,13 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<ProductDocument>>> searchProducts(
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<ProductDocument>>> searchProducts(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) java.math.BigDecimal minPrice,
             @RequestParam(required = false) java.math.BigDecimal maxPrice,
-            @RequestParam(required = false) String sortBy) {
-        return ResponseEntity.ok(productService.searchProducts(query, category, minPrice, maxPrice, sortBy));
+            @RequestParam(required = false) String sortBy,
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(productService.searchProducts(query, category, minPrice, maxPrice, sortBy, pageable));
     }
 }

@@ -94,9 +94,9 @@ public class ProductService {
                 .build();
     }
 
-    public ApiResponse<List<ProductDocument>> searchProducts(String query, String category, BigDecimal minPrice, BigDecimal maxPrice, String sortBy) {
-        log.info("Searching products with query: {}, category: {}, price range: [{}, {}], sortBy: {}", 
-                query, category, minPrice, maxPrice, sortBy);
+    public ApiResponse<Page<ProductDocument>> searchProducts(String query, String category, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, Pageable pageable) {
+        log.info("Searching products with query: {}, category: {}, price range: [{}, {}], sortBy: {}, page: {}", 
+                query, category, minPrice, maxPrice, sortBy, pageable.getPageNumber());
 
         Criteria criteria = new Criteria();
 
@@ -118,6 +118,7 @@ public class ProductService {
         }
 
         CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+        criteriaQuery.setPageable(pageable);
         
         if (sortBy != null && !sortBy.isEmpty()) {
             Sort sort = switch (sortBy.toLowerCase()) {
@@ -130,15 +131,18 @@ public class ProductService {
             criteriaQuery.addSort(sort);
         }
 
-        List<ProductDocument> results = elasticsearchOperations.search(criteriaQuery, ProductDocument.class)
-                .stream()
+        SearchHits<ProductDocument> searchHits = elasticsearchOperations.search(criteriaQuery, ProductDocument.class);
+        
+        List<ProductDocument> results = searchHits.stream()
                 .map(SearchHit::getContent)
                 .collect(Collectors.toList());
 
-        return ApiResponse.<List<ProductDocument>>builder()
+        Page<ProductDocument> page = new PageImpl<>(results, pageable, searchHits.getTotalHits());
+
+        return ApiResponse.<Page<ProductDocument>>builder()
                 .success(true)
                 .message("Search completed")
-                .data(results)
+                .data(page)
                 .build();
     }
 
