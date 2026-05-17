@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  postgres:
+    image: postgres:15-alpine
+    container_name: nexcart-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ecommerce_db
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexcart-redis
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: nexcart-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: nexcart-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  # Core Foundation
+  service-registry:
+    build: ../service-registry
+    container_name: nexcart-service-registry
+    ports:
+      - "8761:8761"
+
+  config-server:
+    build: ../config-server
+    container_name: nexcart-config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - service-registry
+
+  # Microservices
+  user-service:
+    build: ../user-service
+    container_name: nexcart-user-service
+    depends_on:
+      - config-server
+      - postgres
+      - kafka
+
+  product-service:
+    build: ../product-service
+    container_name: nexcart-product-service
+    depends_on:
+      - config-server
+      - postgres
+      - kafka
+      - elasticsearch
+
+  api-gateway:
+    build: ../api-gateway
+    container_name: nexcart-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-server
+      - redis
+
+  order-service:
+    build: ../order-service
+    container_name: nexcart-order-service
+    depends_on:
+      - config-server
+      - postgres
+      - kafka
+
+  payment-service:
+    build: ../payment-service
+    container_name: nexcart-payment-service
+    depends_on:
+      - config-server
+      - postgres
+      - kafka
+
+  notification-service:
+    build: ../notification-service
+    container_name: nexcart-notification-service
+    depends_on:
+      - config-server
+      - kafka
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+
+networks:
+  default:
+    name: nexcart-network
