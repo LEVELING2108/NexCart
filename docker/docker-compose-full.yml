@@ -58,6 +58,46 @@ services:
     networks:
       - nexcart-network
 
+  prometheus:
+    image: prom/prometheus
+    container_name: nexcart-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - nexcart-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: nexcart-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - nexcart-network
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: nexcart-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - nexcart-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.1
+    container_name: nexcart-logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+    networks:
+      - nexcart-network
+
   # Microservices
   service-registry:
     build:

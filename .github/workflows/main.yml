@@ -1,0 +1,33 @@
+name: NexCart CI/CD
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Build with Maven
+      run: mvn -B clean install -DskipTests
+      
+    - name: Run Tests
+      run: mvn test
+      
+    - name: Build Docker Image
+      run: |
+        docker build -t nexcart-user-service ./user-service
+        docker build -t nexcart-product-service ./product-service
+        docker build -t nexcart-order-service ./order-service
