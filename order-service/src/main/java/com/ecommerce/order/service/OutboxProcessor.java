@@ -29,7 +29,8 @@ public class OutboxProcessor {
 
         for (OutboxEvent event : events) {
             try {
-                kafkaTemplate.send("order-placed", event.getPayload());
+                String topic = event.getDestinationTopic() != null ? event.getDestinationTopic() : "order-placed";
+                kafkaTemplate.send(topic, event.getPayload());
                 event.setProcessed(true);
                 outboxRepository.save(event);
             } catch (Exception e) {

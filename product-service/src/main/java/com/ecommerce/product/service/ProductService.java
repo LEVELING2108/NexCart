@@ -165,6 +165,16 @@ public class ProductService {
             // but let's re-verify ProductDocument.java
         });
     }
+
+    @Transactional
+    public void restoreInventory(UUID productId, Integer quantity) {
+        log.info("Restoring inventory for product: {}, quantity: {}", productId, quantity);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
+
+        product.setStockQuantity(product.getStockQuantity() + quantity);
+        productRepository.save(product);
+    }
     
     private ProductResponse mapToResponse(Product product) {
         return ProductResponse.builder()
