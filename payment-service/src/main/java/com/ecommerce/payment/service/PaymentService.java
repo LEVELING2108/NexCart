@@ -1,6 +1,6 @@
 package com.ecommerce.payment.service;
 
-import com.ecommerce.common.event.OrderPlacedEvent;
+import com.ecommerce.common.event.InventoryReservedEvent;
 import com.ecommerce.common.event.PaymentProcessedEvent;
 import com.ecommerce.payment.entity.Payment;
 import com.ecommerce.payment.entity.PaymentStatus;
@@ -23,7 +23,7 @@ public class PaymentService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Transactional
-    public void processPayment(OrderPlacedEvent event) {
+    public void processPayment(InventoryReservedEvent event) {
         log.info("Processing payment for order: {}", event.getOrderId());
 
         // Simulation of payment processing (e.g. calling Razorpay/Stripe)

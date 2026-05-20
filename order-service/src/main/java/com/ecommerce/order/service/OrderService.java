@@ -76,6 +76,7 @@ public class OrderService {
                     .aggregateId(savedOrder.getId().toString())
                     .aggregateType("ORDER")
                     .eventType("ORDER_PLACED")
+                    .destinationTopic("order-placed")
                     .payload(objectMapper.writeValueAsString(event))
                     .createdAt(LocalDateTime.now())
                     .processed(false)

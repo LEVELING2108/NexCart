@@ -1,6 +1,6 @@
 package com.ecommerce.payment.consumer;
 
-import com.ecommerce.common.event.OrderPlacedEvent;
+import com.ecommerce.common.event.InventoryReservedEvent;
 import com.ecommerce.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +14,9 @@ public class OrderEventConsumer {
 
     private final PaymentService paymentService;
 
-    @KafkaListener(topics = "order-placed", groupId = "payment-group")
-    public void consumeOrderPlaced(OrderPlacedEvent event) {
-        log.info("Received OrderPlacedEvent for order: {}", event.getOrderId());
+    @KafkaListener(topics = "inventory-reserved", groupId = "payment-group")
+    public void consumeInventoryReserved(InventoryReservedEvent event) {
+        log.info("Received InventoryReservedEvent for order: {}", event.getOrderId());
         paymentService.processPayment(event);
     }
 }

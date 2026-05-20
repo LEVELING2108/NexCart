@@ -23,6 +23,7 @@ public class OutboxEvent {
     private String aggregateId;
     private String aggregateType;
     private String eventType;
+    private String destinationTopic;
     
     @Column(columnDefinition = "TEXT")
     private String payload;
