@@ -2,12 +2,14 @@ package com.ecommerce.payment.service;
 
 import com.ecommerce.common.event.InventoryReservedEvent;
 import com.ecommerce.common.event.PaymentProcessedEvent;
+import com.ecommerce.payment.entity.OutboxEvent;
 import com.ecommerce.payment.entity.Payment;
 import com.ecommerce.payment.entity.PaymentStatus;
+import com.ecommerce.payment.repository.OutboxRepository;
 import com.ecommerce.payment.repository.PaymentRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +22,8 @@ import java.util.UUID;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public void processPayment(InventoryReservedEvent event) {
@@ -40,7 +43,7 @@ public class PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        // Emit PaymentProcessedEvent
+        // Create PaymentProcessedEvent
         PaymentProcessedEvent processedEvent = PaymentProcessedEvent.builder()
                 .orderId(savedPayment.getOrderId())
                 .paymentId(savedPayment.getId())
@@ -48,7 +51,23 @@ public class PaymentService {
                 .message(paymentSuccessful ? "Payment successful" : "Payment failed")
                 .build();
 
-        kafkaTemplate.send("payment-processed", processedEvent);
+        try {
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateId(savedPayment.getOrderId().toString())
+                    .aggregateType("PAYMENT")
+                    .eventType("PAYMENT_PROCESSED")
+                    .destinationTopic("payment-processed")
+                    .payload(objectMapper.writeValueAsString(processedEvent))
+                    .createdAt(LocalDateTime.now())
+                    .processed(false)
+                    .build();
+            outboxRepository.save(outboxEvent);
+            log.info("Saved PaymentProcessedEvent to outbox for order: {}", event.getOrderId());
+        } catch (Exception e) {
+            log.error("Error serializing payment event", e);
+            throw new RuntimeException("Failed to process payment due to event serialization error");
+        }
+
         log.info("Payment processed for order: {}. Status: {}", event.getOrderId(), savedPayment.getStatus());
     }
 }
