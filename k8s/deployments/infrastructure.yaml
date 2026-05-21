@@ -8,6 +8,7 @@ data:
     CREATE DATABASE product_service;
     CREATE DATABASE order_service;
     CREATE DATABASE payment_service;
+    CREATE DATABASE keycloak;
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

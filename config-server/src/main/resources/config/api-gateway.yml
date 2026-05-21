@@ -7,6 +7,7 @@ spring:
           predicates:
             - Path=/api/auth/**, /api/users/**
           filters:
+            - TokenRelay=
             - name: CircuitBreaker
               args:
                 name: user-service
@@ -16,7 +17,7 @@ spring:
           predicates:
             - Path=/api/products/**
           filters:
-            - name: JwtAuthFilter
+            - TokenRelay=
             - name: CircuitBreaker
               args:
                 name: product-service
@@ -26,7 +27,7 @@ spring:
           predicates:
             - Path=/api/orders/**
           filters:
-            - name: JwtAuthFilter
+            - TokenRelay=
             - name: CircuitBreaker
               args:
                 name: order-service
@@ -35,6 +36,3 @@ spring:
     redis:
       host: localhost
       port: 6379
-
-jwt:
-  secret: REPLACE_WITH_YOUR_JWT_SECRET
