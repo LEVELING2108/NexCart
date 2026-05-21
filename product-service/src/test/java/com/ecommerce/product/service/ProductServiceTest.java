@@ -16,6 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -139,6 +142,17 @@ class ProductServiceTest {
     }
 
     @Test
+    void restoreInventory_ShouldIncreaseStock() {
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        int initialStock = product.getStockQuantity();
+
+        productService.restoreInventory(productId, 5);
+
+        assertEquals(initialStock + 5, product.getStockQuantity());
+        verify(productRepository, times(1)).save(product);
+    }
+
+    @Test
     void searchProducts_ShouldReturnResults() {
         ProductDocument doc = ProductDocument.builder().name("Laptop").build();
         org.springframework.data.elasticsearch.core.SearchHit<ProductDocument> hit = mock(org.springframework.data.elasticsearch.core.SearchHit.class);
@@ -146,14 +160,16 @@ class ProductServiceTest {
         
         org.springframework.data.elasticsearch.core.SearchHits<ProductDocument> hits = mock(org.springframework.data.elasticsearch.core.SearchHits.class);
         when(hits.stream()).thenReturn(java.util.stream.Stream.of(hit));
+        when(hits.getTotalHits()).thenReturn(1L);
         
         when(elasticsearchOperations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ProductDocument.class)))
                 .thenReturn(hits);
 
-        ApiResponse<List<ProductDocument>> response = productService.searchProducts("Laptop", null, null, null, "price_asc");
+        Pageable pageable = PageRequest.of(0, 10);
+        ApiResponse<Page<ProductDocument>> response = productService.searchProducts("Laptop", null, null, null, "price_asc", pageable);
 
         assertTrue(response.isSuccess());
-        assertEquals(1, response.getData().size());
-        assertEquals("Laptop", response.getData().get(0).getName());
+        assertEquals(1, response.getData().getTotalElements());
+        assertEquals("Laptop", response.getData().getContent().get(0).getName());
     }
 }
