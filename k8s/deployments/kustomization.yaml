@@ -11,5 +11,6 @@ resources:
   - order-service.yaml
   - payment-service.yaml
   - notification-service.yaml
+  - keycloak.yaml
   - api-gateway.yaml
   - ingress.yaml
