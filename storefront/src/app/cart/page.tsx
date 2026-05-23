@@ -20,7 +20,7 @@ export default function CartPage() {
 
       {items.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-md-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center gap-4">
                 <div className="h-20 w-20 bg-gray-100 rounded flex items-center justify-center text-3xl">

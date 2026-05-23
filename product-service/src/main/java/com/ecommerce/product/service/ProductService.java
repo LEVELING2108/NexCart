@@ -62,6 +62,7 @@ public class ProductService {
                 .description(savedProduct.getDescription())
                 .price(savedProduct.getPrice())
                 .category(category.getName())
+                .stockQuantity(savedProduct.getStockQuantity())
                 .build();
         productSearchRepository.save(document);
 
@@ -102,26 +103,38 @@ public class ProductService {
         log.info("Searching products with query: {}, category: {}, price range: [{}, {}], sortBy: {}, page: {}", 
                 query, category, minPrice, maxPrice, sortBy, pageable.getPageNumber());
 
-        Criteria criteria = new Criteria();
+        Criteria criteria = null;
 
         if (query != null && !query.isEmpty()) {
-            criteria = criteria.subCriteria(new Criteria("name").contains(query)
-                    .or(new Criteria("description").contains(query)));
+            criteria = new Criteria("name").contains(query)
+                    .or(new Criteria("description").contains(query));
         }
 
         if (category != null && !category.isEmpty()) {
-            criteria = criteria.and(new Criteria("category").is(category));
+            if (criteria == null) {
+                criteria = new Criteria("category").is(category);
+            } else {
+                criteria = criteria.and(new Criteria("category").is(category));
+            }
         }
 
         if (minPrice != null) {
-            criteria = criteria.and(new Criteria("price").greaterThanEqual(minPrice.doubleValue()));
+            if (criteria == null) {
+                criteria = new Criteria("price").greaterThanEqual(minPrice.doubleValue());
+            } else {
+                criteria = criteria.and(new Criteria("price").greaterThanEqual(minPrice.doubleValue()));
+            }
         }
 
         if (maxPrice != null) {
-            criteria = criteria.and(new Criteria("price").lessThanEqual(maxPrice.doubleValue()));
+            if (criteria == null) {
+                criteria = new Criteria("price").lessThanEqual(maxPrice.doubleValue());
+            } else {
+                criteria = criteria.and(new Criteria("price").lessThanEqual(maxPrice.doubleValue()));
+            }
         }
 
-        CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+        CriteriaQuery criteriaQuery = criteria != null ? new CriteriaQuery(criteria) : new CriteriaQuery(new Criteria());
         criteriaQuery.setPageable(pageable);
         
         if (sortBy != null && !sortBy.isEmpty()) {
@@ -165,8 +178,8 @@ public class ProductService {
 
         // Update Elasticsearch
         productSearchRepository.findById(productId.toString()).ifPresent(doc -> {
-            // Document doesn't have stockQuantity field currently based on earlier read, 
-            // but let's re-verify ProductDocument.java
+            doc.setStockQuantity(product.getStockQuantity());
+            productSearchRepository.save(doc);
         });
     }
 
@@ -178,6 +191,12 @@ public class ProductService {
 
         product.setStockQuantity(product.getStockQuantity() + quantity);
         productRepository.save(product);
+
+        // Update Elasticsearch
+        productSearchRepository.findById(productId.toString()).ifPresent(doc -> {
+            doc.setStockQuantity(product.getStockQuantity());
+            productSearchRepository.save(doc);
+        });
     }
     
     private ProductResponse mapToResponse(Product product) {

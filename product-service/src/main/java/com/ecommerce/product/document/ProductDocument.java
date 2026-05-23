@@ -32,4 +32,7 @@ public class ProductDocument {
 
     @Field(type = FieldType.Keyword, name = "category")
     private String category;
+
+    @Field(type = FieldType.Integer, name = "stockQuantity")
+    private Integer stockQuantity;
 }
