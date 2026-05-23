@@ -100,7 +100,7 @@ services:
 
   # Microservices
   service-registry:
-    build: ./service-registry
+    build: ../service-registry
     container_name: service-registry
     ports:
       - "8761:8761"
@@ -108,7 +108,7 @@ services:
       - nexcart-network
 
   config-server:
-    build: ./config-server
+    build: ../config-server
     container_name: config-server
     ports:
       - "8888:8888"
@@ -118,7 +118,7 @@ services:
       - nexcart-network
 
   api-gateway:
-    build: ./api-gateway
+    build: ../api-gateway
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -128,7 +128,7 @@ services:
       - nexcart-network
 
   user-service:
-    build: ./user-service
+    build: ../user-service
     container_name: user-service
     depends_on:
       - config-server
@@ -138,7 +138,7 @@ services:
       - nexcart-network
 
   product-service:
-    build: ./product-service
+    build: ../product-service
     container_name: product-service
     depends_on:
       - config-server
@@ -148,7 +148,7 @@ services:
       - nexcart-network
 
   order-service:
-    build: ./order-service
+    build: ../order-service
     container_name: order-service
     depends_on:
       - config-server
